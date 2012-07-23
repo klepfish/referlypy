@@ -1,9 +1,15 @@
 import urllib2
+import urllib
 import base64
+import json
 from django.conf import settings
 
-def make_request(endpoint, data):
-	req = urllib2.Request('https://refer.ly/api/120701/'+endpoint, urllib2.urlencode(data))
+def make_request(endpoint, data, type = 'POST'):
+	if type is 'GET':
+		req = urllib2.Request('https://refer.ly/api/120701/'+endpoint + urllib.urlencode(data))
+	else:
+		req = urllib2.Request('https://refer.ly/api/120701/'+endpoint, urllib.urlencode(data))
+	
 	req.add_header('Accept', 'application/json')
 	base64string = base64.encodestring('%s:%s' % (settings.REFERLY_KEY, settings.REFERLY_SECRET)).replace('\n', '')
 	req.add_header("Authorization", "Basic %s" % base64string)
@@ -11,7 +17,8 @@ def make_request(endpoint, data):
 	res = urllib2.urlopen(req)
 	data = res.read()
 	
-	return data
+	results = json.loads(data)
+	return results
 	
 def create_account(email):
 	data = {}
@@ -25,7 +32,7 @@ def list_links(count = None, page = None):
 	if page is not None:
 		data['page'] = page
 
-	return make_request('links', data)
+	return make_request('links', data, 'GET')
 
 def create_link(url, account_id = None):
 	data = {}
@@ -53,4 +60,4 @@ def list_rewards(account_id = None, link_id = None):
 	if link_id is not None:
 		data['link_id'] = link_id
 
-	return make_request('rewards', data)	
+	return make_request('rewards', data, 'GET')	
